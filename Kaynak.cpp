@@ -20,8 +20,8 @@ typedef struct
 	int xpos;
 	int ypos;
 	int radius;
-	int velox;
-	int veloy;
+	float velox;
+	float veloy;
 	float accex;
 	float accey;
 	int score;
@@ -51,6 +51,7 @@ void move_left(HERO &player1, bool keys[]);
 void move_down(HERO &player1, bool keys[]);
 void move_up(HERO &player1, bool keys[]);
 void draw_area(COLOURS color);
+void player2_bot(HERO &player, BALL &puck);
 
 int main()
 {
@@ -66,6 +67,7 @@ int main()
 	bool keysP1[5] = { false,false, false, false, false };
 	bool gameover = false;
 	al_start_timer(timer);
+	al_hide_mouse_cursor(display);
 	while (!gameover)
 	{
 		ALLEGRO_EVENT ev;
@@ -113,6 +115,47 @@ int main()
 			int collisionPointX = ((player1.xpos * puck.radius) + (puck.xpos * player1.radius)) / (player1.radius + puck.radius);
 			int collisionPointY = ((player1.ypos * puck.radius) + (puck.ypos * player1.radius)) / (player1.radius + puck.radius);
 			int vector = sqrt(pow(player1.velox,2) + pow(player1.veloy,2)); 
+			float angle=0;
+			if (collisionPointX < puck.xpos)
+			{
+				angle = ((player1.radius + puck.radius) / (player1.xpos - puck.xpos));
+				puck.velox = -vector*angle;
+				if (collisionPointY > puck.ypos)
+				{
+					puck.veloy = -vector*sqrt(2) / 2;
+				}
+				else if (collisionPointY > puck.ypos)
+				{
+					puck.veloy = vector*sqrt(2) / 2;
+				}
+			}
+			else if (collisionPointX > puck.xpos)
+			{
+				angle = (player1.radius + puck.radius) / (player1.xpos - puck.xpos);
+				puck.velox = -vector*angle;
+				if (collisionPointY > puck.ypos)
+				{
+					puck.veloy = -vector*sqrt(2)/2;
+				}
+				else if (collisionPointY > puck.ypos)
+				{
+					puck.veloy = vector*sqrt(2) / 2;
+				}
+			}
+			if (collisionPointX == puck.xpos)
+			{
+				puck.veloy = -player1.velox;
+				puck.ypos += puck.veloy;
+			}
+			puck.xpos += puck.velox;
+			puck.ypos += puck.veloy;
+			printf("carpistibir\t %d", angle);
+		}
+		else if (pow(pow(player2.xpos - puck.xpos, 2) + pow(player2.ypos - puck.ypos, 2), 0.5) <= (player2.radius + puck.radius))
+		{
+			int collisionPointX = ((player2.xpos * puck.radius) + (puck.xpos * player2.radius)) / (player2.radius + puck.radius);
+			int collisionPointY = ((player2.ypos * puck.radius) + (puck.ypos * player2.radius)) / (player2.radius + puck.radius);
+			int vector = sqrt(pow(player2.velox, 2) + pow(player2.veloy, 2));
 			if (collisionPointX < puck.xpos)
 			{
 				puck.velox = vector*sqrt(2) / 2;
@@ -137,17 +180,34 @@ int main()
 					puck.veloy = vector*sqrt(2) / 2;
 				}
 			}
-			
+			if (collisionPointX == puck.xpos)
+			{
+				puck.veloy = player2.velox;
+				puck.ypos += puck.veloy;
+			}
 			puck.xpos += puck.velox;
 			puck.ypos += puck.veloy;
-			printf("carpisti");
+			printf("iki\t");
 		}
 		else if (ev.type == ALLEGRO_EVENT_TIMER)
 		{
+			if (puck.xpos >= width - puck.radius || puck.xpos <= puck.radius)
+			{
+				if (puck.xpos > width / 2) { puck.xpos = width - puck.radius; }
+				else if (puck.xpos < width / 2) { puck.xpos = puck.radius; }
+				puck.velox *= -1;
+			}
+			if (puck.ypos <= puck.radius || puck.ypos >= height - puck.radius)
+			{
+				if (puck.ypos > height / 2) { puck.ypos = height - puck.radius; }
+				else if (puck.ypos < height / 2) { puck.ypos = puck.radius; }
+				puck.veloy *= -1;
+			}
 			puck.xpos += puck.velox;
 			puck.ypos += puck.veloy;
 			//puck.velox -= puck.accex;
 			//puck.veloy -= puck.accey;
+			//player2_bot(player2, puck); //player 2 bot
 			if (keysP1[UP]) { move_up(player1, keysP1); }
 			if (keysP1[DOWN]) { move_down(player1, keysP1); }
 			if (keysP1[LEFT]) { move_left(player1, keysP1); }
@@ -162,9 +222,12 @@ int main()
 				player1.velox = SPEED;
 				player1.veloy = SPEED;
 			}
-			if (puck.xpos >= width - puck.radius || puck.xpos <= puck.radius) { puck.velox *= -1; }
-			if (puck.ypos <= puck.radius || puck.ypos >= height - puck.radius) { puck.veloy *= -1; }
+			
 		}
+		/*else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES){
+			player1.xpos = ev.mouse.x;
+			player1.ypos = ev.mouse.y;
+		}*/
 	}
 }
 
@@ -173,6 +236,7 @@ void allegro_init()
 	al_init();
 	al_init_primitives_addon();
 	al_install_keyboard();
+	al_install_mouse();
 }
 void draw_hero(HERO &hero, COLOURS renk)
 {
@@ -192,10 +256,10 @@ void init_hero_p1(HERO &hero)
 void init_hero_p2(HERO &hero)
 {
 	hero.xpos = width / 2;
-	hero.ypos = height *0.25;
-	hero.radius = 40;
-	hero.velox = SPEED;
-	hero.veloy = SPEED;
+	hero.ypos = height *0.15;
+	hero.radius = 30;
+	hero.velox = 8;
+	hero.veloy = 5;
 	hero.accex = 0;
 	hero.accey = 0;
 	hero.score = 0;
@@ -216,6 +280,7 @@ void register_sources(ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_TIMER *timer)
 {
 	al_register_event_source(queue, al_get_keyboard_event_source());
 	al_register_event_source(queue, al_get_timer_event_source(timer));
+	al_register_event_source(queue, al_get_mouse_event_source());
 }
 void move_up(HERO &player1, bool keys[])
 {
@@ -245,4 +310,35 @@ void draw_area(COLOURS color)
 	al_draw_circle(width / 2, 0, 250, color.rami, 5);
 	al_draw_rectangle(width / 2 - 120, height - 15, width / 2 + 120, height + 5, color.rami, 5);
 	al_draw_rectangle(width / 2 - 120, 15, width / 2 + 120, -5, color.rami, 5);
+}
+void player2_bot(HERO &player, BALL &puck)
+{
+
+	/*
+	if (player.ypos > height / 2 - player.radius) { player.ypos = height / 2 - player.radius; }
+	else if (pow(pow(player.xpos - puck.xpos, 2) + pow(player.ypos - puck.ypos, 2), 0.5) < 120)
+	{
+		player.ypos += player.veloy;
+	}
+	else
+	{
+		if (player.ypos<=150)
+		{
+			player.ypos = 150;
+		}
+		else
+		{
+			player.ypos -= player.veloy;
+		}
+	}
+	*/
+
+	if (puck.xpos>player.xpos+15)
+	{
+		player.xpos += player.velox;
+	}
+	else if(puck.xpos<player.xpos-15)
+	{
+		player.xpos -= player.velox;
+	}
 }
