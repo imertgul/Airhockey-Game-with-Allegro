@@ -57,11 +57,12 @@ void player2_bot(HERO &player, BALL &puck);
 void make_collision(HERO &player1, BALL &puck);
 void main_menu(bool &menu, ALLEGRO_FONT *font, COLOURS color, ALLEGRO_EVENT_QUEUE *queue, bool &stop, bool &gameover);
 void score_table(ALLEGRO_FONT *font, HERO &player1, HERO &player2);
+void scored(BALL &puck);
 int main()
 {
-RESTART:
 	allegro_init();
 	ALLEGRO_DISPLAY *display = al_create_display(width, height);
+RESTART:
 	COLOURS color;
 	ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
 	ALLEGRO_TIMER *timer = al_create_timer(1 / FPS);
@@ -184,8 +185,8 @@ RESTART:
 				player1.velox = SPEED;
 				player1.veloy = SPEED;
 			}
-			if (puck.xpos > width / 2 - 120 && puck.ypos > height - puck.radius && puck.xpos < width / 2 + 120) { player2.score++; }
-			if (puck.xpos > width / 2 - 120 && puck.ypos < puck.radius && puck.xpos < width / 2 + 120) { player1.score++; }
+			if (puck.xpos > width / 2 - 120 && puck.ypos > height - puck.radius && puck.xpos < width / 2 + 120) { player2.score++; scored(puck); }
+			if (puck.xpos > width / 2 - 120 && puck.ypos < puck.radius && puck.xpos < width / 2 + 120) { player1.score++; scored(puck); }
 		}
 	}
 }
@@ -288,6 +289,7 @@ void player2_bot(HERO &player, BALL &puck)
 			player.ypos = height * 0.3;
 		}
 	}
+
 	else
 	{
 		if (player.ypos <= 150)
@@ -301,14 +303,16 @@ void player2_bot(HERO &player, BALL &puck)
 	}
 
 
-	if (puck.xpos > player.xpos + 15 && player.ypos < puck.ypos + 5)
+	if (puck.xpos > player.xpos + 100 && player.ypos < puck.ypos + 5)
 	{
 		player.xpos += player.velox;
 	}
-	else if (puck.xpos < player.xpos - 15 && player.ypos < puck.ypos + 5)
+	else if (puck.xpos < player.xpos - 100 && player.ypos < puck.ypos + 5)
 	{
 		player.xpos -= player.velox;
 	}
+
+
 }
 void make_collision(HERO &player1, BALL &puck)
 {
@@ -374,4 +378,11 @@ void score_table(ALLEGRO_FONT *font, HERO &player1, HERO &player2)
 {
 	al_draw_textf(font, al_map_rgb(162, 162, 162), 540, 410, 0, "%d ", player2.score);
 	al_draw_textf(font, al_map_rgb(162, 162, 162), 540, 460, 0, "%d", player1.score);
+}
+void scored(BALL &puck)
+{
+	puck.xpos = width / 2;
+	puck.ypos = height / 2;
+	puck.velox = 0;
+	puck.veloy = 0;
 }
