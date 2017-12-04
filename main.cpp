@@ -11,11 +11,11 @@
 #define SPEED 6
 typedef struct
 {
-	ALLEGRO_COLOR black = al_map_rgb(0, 0, 0);
-	ALLEGRO_COLOR rami = al_map_rgb(122, 113, 143);
-	ALLEGRO_COLOR windowsblue = al_map_rgb(31, 52, 69);
-	ALLEGRO_COLOR white = al_map_rgb(240, 255, 250);
-	ALLEGRO_COLOR ball = al_map_rgb(6, 12, 255);
+	ALLEGRO_COLOR black ;
+	ALLEGRO_COLOR rami ;
+	ALLEGRO_COLOR windowsblue ;
+	ALLEGRO_COLOR white ;
+	ALLEGRO_COLOR ball;
 }COLOURS;
 typedef struct
 {
@@ -43,6 +43,7 @@ typedef struct
 enum KEYS { UP, DOWN, LEFT, RIGHT, SHIFT };
 
 void allegro_init();
+void color_init(COLOURS *renk); //done
 void draw_hero(HERO &hero, COLOURS renk);
 void init_hero_p1(HERO &hero);
 void init_hero_p2(HERO &hero);
@@ -53,17 +54,18 @@ void move_left(HERO &player1, bool keys[]);
 void move_down(HERO &player1, bool keys[]);
 void move_up(HERO &player1, bool keys[]);
 void draw_area(COLOURS color);
-void player2_bot(HERO &player, BALL &puck);
-void make_collision(HERO &player1, BALL &puck);
-void main_menu(bool &menu, ALLEGRO_FONT *font, COLOURS color, ALLEGRO_EVENT_QUEUE *queue, bool &stop, bool &gameover);
-void score_table(ALLEGRO_FONT *font, HERO &player1, HERO &player2);
-void scored(BALL &puck);
+void player2_bot(HERO *player, BALL *puck);//done
+void make_collision(HERO *player1, BALL *puck);//done
+void main_menu(bool& menu, ALLEGRO_FONT *font, COLOURS color, ALLEGRO_EVENT_QUEUE *queue, bool& stop, bool& gameover);//done
+void score_table(ALLEGRO_FONT *font, HERO *player1, HERO *player2);//done
+void scored(BALL *puck);
 int main()
 {
 	allegro_init();
 	ALLEGRO_DISPLAY *display = al_create_display(width, height);
 RESTART:
 	COLOURS color;
+	color_init(&color);
 	ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
 	ALLEGRO_TIMER *timer = al_create_timer(1 / FPS);
 	HERO player1; init_hero_p1(player1);
@@ -92,7 +94,7 @@ RESTART:
 			al_rest(5.00);
 			goto RESTART;
 		}
-		else if (player2.score==6)
+		else if (player2.score == 6)
 		{
 			al_draw_text(font, color.rami, 300, 460, 1, "PLAYER 2 WINS!!!");
 			al_flip_display();
@@ -104,7 +106,7 @@ RESTART:
 		draw_hero(player1, color);
 		draw_hero(player2, color);
 		al_draw_filled_circle(puck.xpos, puck.ypos, puck.radius, color.ball);
-		score_table(font_small, player1, player2);
+		score_table(font_small, &player1, &player2);
 		al_flip_display();
 		if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
 		{
@@ -148,8 +150,8 @@ RESTART:
 				keysP1[SHIFT] = false; break;
 			}
 		}
-		make_collision(player1, puck);
-		make_collision(player2, puck);
+		make_collision(&player1, &puck);
+		make_collision(&player2, &puck);
 		if (ev.type == ALLEGRO_EVENT_TIMER)
 		{
 			if (puck.xpos >= width - puck.radius || puck.xpos <= puck.radius)
@@ -170,7 +172,7 @@ RESTART:
 			else if (puck.veloy < 0) { puck.veloy += puck.accey; }
 			if (puck.velox < 0) { puck.velox += puck.accex; }
 			else if (puck.velox > 0) { puck.velox -= puck.accex; }
-			player2_bot(player2, puck); //player 2 bot
+			player2_bot(&player2, &puck); //player 2 bot
 			if (keysP1[UP]) { move_up(player1, keysP1); }
 			if (keysP1[DOWN]) { move_down(player1, keysP1); }
 			if (keysP1[LEFT]) { move_left(player1, keysP1); }
@@ -185,8 +187,8 @@ RESTART:
 				player1.velox = SPEED;
 				player1.veloy = SPEED;
 			}
-			if (puck.xpos > width / 2 - 120 && puck.ypos > height - puck.radius && puck.xpos < width / 2 + 120) { player2.score++; scored(puck); }
-			if (puck.xpos > width / 2 - 120 && puck.ypos < puck.radius && puck.xpos < width / 2 + 120) { player1.score++; scored(puck); }
+			if (puck.xpos > width / 2 - 120 && puck.ypos > height - puck.radius && puck.xpos < width / 2 + 120) { player2.score++; scored(&puck); }
+			if (puck.xpos > width / 2 - 120 && puck.ypos < puck.radius && puck.xpos < width / 2 + 120) { player1.score++; scored(&puck); }
 		}
 	}
 }
@@ -199,6 +201,14 @@ void allegro_init()
 	al_install_mouse();
 	al_init_font_addon();
 	al_init_ttf_addon();
+}
+void color_init(COLOURS *renk)
+{
+	renk->black = al_map_rgb(0, 0, 0);
+	renk->rami = al_map_rgb(122, 113, 143);
+	renk->windowsblue = al_map_rgb(31, 52, 69);
+	renk->white = al_map_rgb(240, 255, 250);
+	renk->ball = al_map_rgb(6, 12, 255);
 }
 void draw_hero(HERO &hero, COLOURS renk)
 {
@@ -273,63 +283,63 @@ void draw_area(COLOURS color)
 	al_draw_rectangle(width / 2 - 120, height - 15, width / 2 + 120, height + 5, color.rami, 5);
 	al_draw_rectangle(width / 2 - 120, 15, width / 2 + 120, -5, color.rami, 5);
 }
-void player2_bot(HERO &player, BALL &puck)
+void player2_bot(HERO *player, BALL *puck)
 {
 
 
-	if (player.ypos > height / 2 - player.radius)
+	if (player->ypos > height / 2 - player->radius)
 	{
-		player.ypos = height / 2 - player.radius;
+		player->ypos = height / 2 - player->radius;
 	}
-	else if (pow(pow(player.xpos - puck.xpos, 2) + pow(player.ypos - puck.ypos, 2), 0.5) < 120 && puck.ypos > player.ypos)
+	else if (pow(pow(player->xpos - puck->xpos, 2) + pow(player->ypos - puck->ypos, 2), 0.5) < 120 && puck->ypos > player->ypos)
 	{
-		player.ypos += player.veloy;
-		if (player.ypos > height * 0.3)
+		player->ypos += player->veloy;
+		if (player->ypos > height * 0.3)
 		{
-			player.ypos = height * 0.3;
+			player->ypos = height * 0.3;
 		}
 	}
 
 	else
 	{
-		if (player.ypos <= 150)
+		if (player->ypos <= 150)
 		{
-			player.ypos = 150;
+			player->ypos = 150;
 		}
 		else
 		{
-			player.ypos -= player.veloy;
+			player->ypos -= player->veloy;
 		}
 	}
 
 
-	if (puck.xpos > player.xpos + 100 && player.ypos < puck.ypos + 5)
+	if (puck->xpos > player->xpos + 100 && player->ypos < puck->ypos + 5)
 	{
-		player.xpos += player.velox;
+		player->xpos += player->velox;
 	}
-	else if (puck.xpos < player.xpos - 100 && player.ypos < puck.ypos + 5)
+	else if (puck->xpos < player->xpos - 100 && player->ypos < puck->ypos + 5)
 	{
-		player.xpos -= player.velox;
+		player->xpos -= player->velox;
 	}
 
 
 }
-void make_collision(HERO &player1, BALL &puck)
+void make_collision(HERO *player1, BALL *puck)
 {
-	if (pow(pow(player1.xpos - puck.xpos, 2) + pow(player1.ypos - puck.ypos, 2), 0.5) <= (player1.radius + puck.radius))
+	if (pow(pow(player1->xpos - puck->xpos, 2) + pow(player1->ypos - puck->ypos, 2), 0.5) <= (player1->radius + puck->radius))
 	{
-		double collisionPointX = ((player1.xpos * puck.radius) + (puck.xpos * player1.radius)) / (player1.radius + puck.radius);
-		double collisionPointY = ((player1.ypos * puck.radius) + (puck.ypos * player1.radius)) / (player1.radius + puck.radius);
-		double vector = sqrt(pow(player1.velox, 2) + pow(player1.veloy, 2));
-		double cosa = (player1.xpos - puck.xpos) / (player1.radius + puck.radius);
-		double sina = (player1.ypos - puck.ypos) / (player1.radius + puck.radius);
-		puck.velox = -vector*cosa;
-		puck.veloy = -vector*sina;
-		puck.xpos += puck.velox;
-		puck.ypos += puck.veloy;
+		double collisionPointX = ((player1->xpos * puck->radius) + (puck->xpos * player1->radius)) / (player1->radius + puck->radius);
+		double collisionPointY = ((player1->ypos * puck->radius) + (puck->ypos * player1->radius)) / (player1->radius + puck->radius);
+		double vector = sqrt(pow(player1->velox, 2) + pow(player1->veloy, 2));
+		double cosa = (player1->xpos - puck->xpos) / (player1->radius + puck->radius);
+		double sina = (player1->ypos - puck->ypos) / (player1->radius + puck->radius);
+		puck->velox = -vector*cosa;
+		puck->veloy = -vector*sina;
+		puck->xpos += puck->velox;
+		puck->ypos += puck->veloy;
 	}
 }
-void main_menu(bool &menu, ALLEGRO_FONT *font, COLOURS color, ALLEGRO_EVENT_QUEUE *queue, bool &stop, bool &gameover)
+void main_menu(bool& menu, ALLEGRO_FONT *font, COLOURS color, ALLEGRO_EVENT_QUEUE *queue, bool& stop, bool& gameover)
 {
 	while (menu)
 	{
@@ -353,7 +363,7 @@ void main_menu(bool &menu, ALLEGRO_FONT *font, COLOURS color, ALLEGRO_EVENT_QUEU
 		{
 			if (ev.mouse.y >= height / 2 - 200 && ev.mouse.y < height / 2)
 			{
-				menu = false;	
+				menu = false;
 			}
 			else if (ev.mouse.y >= height / 2 - 400 && ev.mouse.y < height / 2 - 200)
 			{
@@ -374,15 +384,15 @@ void main_menu(bool &menu, ALLEGRO_FONT *font, COLOURS color, ALLEGRO_EVENT_QUEU
 		al_flip_display();
 	}
 }
-void score_table(ALLEGRO_FONT *font, HERO &player1, HERO &player2)
+void score_table(ALLEGRO_FONT *font, HERO *player1, HERO *player2)
 {
-	al_draw_textf(font, al_map_rgb(162, 162, 162), 540, 410, 0, "%d ", player2.score);
-	al_draw_textf(font, al_map_rgb(162, 162, 162), 540, 460, 0, "%d", player1.score);
+	al_draw_textf(font, al_map_rgb(162, 162, 162), 540, 410, 0, "%d ", player2->score);
+	al_draw_textf(font, al_map_rgb(162, 162, 162), 540, 460, 0, "%d", player1->score);
 }
-void scored(BALL &puck)
+void scored(BALL *puck)
 {
-	puck.xpos = width / 2;
-	puck.ypos = height / 2;
-	puck.velox = 0;
-	puck.veloy = 0;
+	puck->xpos = width / 2;
+	puck->ypos = height / 2;
+	puck->velox = 0;
+	puck->veloy = 0;
 }
